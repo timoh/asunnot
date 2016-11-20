@@ -1,0 +1,14 @@
+p#notice = notice
+
+p
+  strong Title:
+  = @listing.title
+
+- if @listing.oikotie_payload
+  p
+    strong Oikotie:
+    = @listing.oikotie_payload
+
+= link_to 'Edit', edit_listing_path(@listing)
+'|
+= link_to 'Back', listings_path
