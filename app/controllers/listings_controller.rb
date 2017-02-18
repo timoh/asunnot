@@ -1,6 +1,11 @@
 class ListingsController < ApplicationController
   before_action :set_listing, only: [:show, :edit, :update, :destroy]
 
+  def room_configs
+    @room_configs = Listing.get_distinct_room_configs
+    render json: @room_configs
+  end
+
   # GET /listings
   # GET /listings.json
   def index

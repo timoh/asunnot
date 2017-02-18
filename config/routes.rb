@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   resources :listings
   resources :ilmoitus
+
+  get 'listings/room_configs' => 'listings#room_configs'
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
