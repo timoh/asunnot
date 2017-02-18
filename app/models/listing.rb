@@ -1,9 +1,11 @@
-# require 'selenium-webdriver'
-# require 'phantomjs'
-# require 'watir'
+require 'selenium-webdriver'
+require 'watir-webdriver'
+require 'phantomjs'
+require 'watir'
 require 'uri'
 require 'rest_client'
 require 'json'
+require 'set'
 
 class Listing
   include Mongoid::Document
@@ -11,11 +13,21 @@ class Listing
 
   field :title, type: String
   field :oikotie_payload, type: Hash
+  field :oikotie_detail_payload, type: Hash
   field :oikotie_id, type: String
 
   validates :oikotie_id, uniqueness: true
 
   before_save :construct_title
+
+  def Listing.get_distinct_room_configs
+    out_set = Set.new
+    Listing.all.each do |listing|
+      out_set.add(listing.oikotie_payload['roomConfiguration'])
+    end
+
+    return out_set
+  end
 
   def construct_title
     oikotie = true if self.oikotie_payload
@@ -24,6 +36,50 @@ class Listing
       constructed_title = self.oikotie_payload['buildingData']['city'].to_s + ": " + self.oikotie_payload['buildingData']['address'].to_s + " - "+  self.oikotie_payload['description'].to_s
       self.title = constructed_title
     end
+  end
+
+  def Listing.scrape_oikotie(page_url)
+    puts "Attempting to scrape #{page_url} with PhantomJS"
+
+    b = Watir::Browser.new :phantomjs
+    b.goto page_url
+    scrape_output = b.title if b.title
+    b.close
+
+    if scrape_output
+      return scrape_output
+    else
+      puts "Scrape failed!"
+      return false
+    end
+  end
+
+  def oikotie_populate_detail
+    begin
+      payload_exists = true if self.oikotie_payload
+      payload_valid = true if self.oikotie_payload.length > 1
+    rescue Exception => detail
+      puts "Fail!"
+      puts detail
+    end
+
+    if payload_exists && payload_valid
+      # http://asunnot.oikotie.fi/myytavat-asunnot/helsinki/13551301
+
+      if self.oikotie_payload['url'].length > 1
+        page_url = self.oikotie_payload['url']
+        scrape_output = Listing.scrape_oikotie page_url
+
+        self.oikotie_detail_payload = scrape_output
+        self.save!
+        puts "Enriching with detail successful!"
+      else
+        puts "No valid URL in payload!"
+      end
+    else
+      puts "No payload – no dice!"
+    end
+
   end
 
   def Listing.oikotie_get_cards(limit=24, offset=0)
