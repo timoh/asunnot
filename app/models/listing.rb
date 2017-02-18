@@ -23,7 +23,9 @@ class Listing
   def Listing.get_distinct_room_configs
     out_set = Set.new
     Listing.all.each do |listing|
-      out_set.add(listing.oikotie_payload['roomConfiguration'])
+      if listing && listing.oikotie_payload && listing.oikotie_payload['roomConfiguration']
+        out_set.add(listing.oikotie_payload['roomConfiguration'])
+      end
     end
 
     return out_set
