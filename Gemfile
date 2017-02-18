@@ -11,6 +11,8 @@ gem 'mongoid', '~> 5.1', '>= 5.1.3'
 gem 'slim', '~> 3.0', '>= 3.0.7'
 gem 'slim-rails', '~> 3.1'
 
+gem 'rails_12factor'
+
 gem 'watir', '~> 5.0'
 gem 'watir-webdriver', '~> 0.9.1'
 gem 'watir-rails', '~> 1.1'
